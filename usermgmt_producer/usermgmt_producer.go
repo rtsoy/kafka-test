@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"kafka-test/usermgmt"
@@ -30,12 +31,30 @@ func main() {
 		}
 	}()
 
-	// Produce messages to topic (asynchronously)
+	newUsers := map[string]int{
+		"Alice": 32,
+		"Mark":  17,
+		"John":  25,
+		"Marry": 20,
+	}
+
 	topic := usermgmt.UserManagementTopic
-	for _, word := range []string{"Welcome", "to", "the", "Confluent", "Kafka", "Golang", "client"} {
+
+	for name, age := range newUsers {
+		user := usermgmt.User{
+			Name: name,
+			Age:  age,
+		}
+
+		userBytes, err := json.Marshal(user)
+		if err != nil {
+			fmt.Printf("Failed to marshal a user to JSON: %v", err)
+			continue
+		}
+
 		p.Produce(&kafka.Message{
 			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
-			Value:          []byte(word),
+			Value:          userBytes,
 		}, nil)
 	}
 
